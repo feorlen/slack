@@ -82,6 +82,31 @@ func NewPostMessageParameters() PostMessageParameters {
 	}
 }
 
+// From gtrindade/slack
+// DeleteEphemeral deletes the ephemeral message, use the responseURL from the action payload in your ephemeral message. Only works for the interactive ones.
+func (api *Client) DeleteEphemeral(responseURL string) (*SlackResponse, error) {
+    message := Msg{
+        ResponseType:    "ephemeral",
+        Text:            "",
+        ReplaceOriginal: true,
+        DeleteOriginal:  true,
+    }
+    return api.SendResponse(responseURL, message)
+}
+
+// From gtrindade/slack
+// SendResponse Will send a json response marshalled from Msg as string using the responseURL as endpoint.
+func (api *Client) SendResponse(responseURL string, message Msg) (*SlackResponse, error) {
+    payload, err := json.Marshal(message)
+    if err != nil {
+        return nil, err
+    }
+    json := []byte(payload)
+    response := &SlackResponse{}
+    err = postJSON(context.Background(), api.httpclient, responseURL, api.token, json, response, api)
+    return response, err
+}
+
 // DeleteMessage deletes a message in a channel
 func (api *Client) DeleteMessage(channel, messageTimestamp string) (string, string, error) {
 	respChannel, respTimestamp, _, err := api.SendMessageContext(
